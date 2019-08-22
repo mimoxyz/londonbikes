@@ -6,10 +6,7 @@ import sys
 query_url = 'https://api.tfl.gov.uk/bikepoint'
 
 def usage():
-  print("""Usage:
-londonbikes search <search_string>
-londonbikes search <latitude> <longitude> <radius_in_metres>
-londonbikes id <bike_point_id>""")
+  print("Usage: {0}londonbikes search <search_string> {0}londonbikes search <latitude> <longitude> <radius_in_metres> {0}londonbikes id <bike_point_id>".format("\r\n"))
 
 def search_by_id(bike_point_id):
     if bike_point_id:
@@ -49,13 +46,16 @@ def search_by_name(search_string):
 def search_by_coordinates(latitude, longitude, radius_in_metres):
     resp = requests.get(url=query_url, params={'lat':latitude, 'lon': longitude, 'radius': radius_in_metres })
     data = resp.json()
-    if len(data) == 0:
+    if len(data) == 0 or resp.status_code == 400:
       print("The search request is invalid")
       sys.exit(11)
     else:
-      print('{:<20s}{:<50s}{:<12s}{:<12s}{:<20s}'.format("Id","Name","Latitude","Longitude", "Distance"))
-      for p in data['places']: 
-        print('{:<20s}{:<50s}{:<12f}{:<12f}{:<20f}'.format(p['id'], p['commonName'], p['lat'], p['lon'], p['distance'] ))
+      if len(data['places']) >0:
+        print('{:<20s}{:<50s}{:<12s}{:<12s}{:<20s}'.format("Id","Name","Latitude","Longitude", "Distance"))
+        for p in data['places']: 
+          print('{:<20s}{:<50s}{:<12f}{:<12f}{:<20f}'.format(p['id'], p['commonName'], p['lat'], p['lon'], p['distance'] ))
+      else:
+        print("No bikepoints found with {0} meters of {1} lat, {2} lon".format(latitude, longitude, radius_in_metres))
 
 def main():
   if len(sys.argv) <= 1 or len(sys.argv) > 5 or sys.argv[1] not in ('id', 'search'):
